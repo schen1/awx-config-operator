@@ -1,0 +1,3 @@
+resources:
+  - console-yaml-samples/awx-sample.yaml
+  - console-yaml-samples/awxconfig-sample.yaml

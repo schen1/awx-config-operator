@@ -32,7 +32,12 @@ spec:
           spec:
             description: Spec defines the desired state of AWXConfig
             type: object
-            x-kubernetes-preserve-unknown-fields: true
+            properties:
+              deployment_name:
+                description: name of the AWX or AutomationController you want to configure.
+                type: string
+            required:
+              - deployment_name
           status:
             description: Status defines the observed state of AWXConfig
             type: object

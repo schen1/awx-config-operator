@@ -55,3 +55,25 @@ rules:
       - update
       - watch
 #+kubebuilder:scaffold:rules
+  ## Get, list, watch AWX
+  - apiGroups:
+      - awx.ansible.com
+    resources:
+      - awxs
+#      - automationcontrollers
+    verbs:
+      - get
+      - list
+      - watch
+  ## Creation of service monitors
+  - verbs:
+      - get
+      - list
+      - watch
+      - create
+      - patch
+      - update
+    apiGroups:
+      - monitoring.coreos.com
+    resources:
+      - servicemonitors

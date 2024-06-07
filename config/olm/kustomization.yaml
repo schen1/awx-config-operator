@@ -1,0 +1,6 @@
+resources:
+- subscription.yaml
+- operator_group.yaml
+  #- namespace.yaml
+
+namespace: awx-operator

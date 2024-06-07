@@ -1,2 +1,14 @@
 ---
 # defaults file for AWXConfig
+
+# Upstream
+api_version: awx.ansible.com/v1beta1
+kind: AWX
+operator_type: awx
+# Downstream
+# api_version: automationcontroller.ansible.com/v1beta1
+# kind: AutomationController
+# operator_type: automationcontroller
+
+# Generic
+deployment_name: 

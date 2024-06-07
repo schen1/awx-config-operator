@@ -1,0 +1,62 @@
+apiVersion: console.openshift.io/v1
+kind: ConsoleYAMLSample
+metadata:
+  name: awx-sample
+spec:
+  description: Request an AWX
+  targetResource:
+    apiVersion: awx.ansible.com/v1beta1
+    kind: AWX
+  title: Default AWX
+  yaml: |
+    apiVersion: awx.ansible.com/v1beta1
+    kind: AWX
+    metadata:
+      labels:
+        app.kubernetes.io/name: awx
+        app.kubernetes.io/instance: awx-sample
+        app.kubernetes.io/part-of: awx-operator
+        app.kubernetes.io/managed-by: kustomize
+        app.kubernetes.io/created-by: awx-operator
+      name: awx-sample
+    spec:
+      create_preload_data: true
+      route_tls_termination_mechanism: Edge
+      garbage_collect_secrets: false
+      ingress_type: Route
+      loadbalancer_port: 80
+      task_resource_requirements:
+        requests:
+          cpu: 500m
+          memory: 2Gi
+        limits:
+          cpu: 500m
+          memory: 2Gi
+      image_pull_policy: IfNotPresent
+      task_privileged: false
+      projects_storage_access_mode: ReadWriteMany
+      web_resource_requirements:
+        requests:
+          cpu: 500m
+          memory: 2Gi
+        limits:
+          cpu: 500m
+          memory: 2Gi
+      ee_resource_requirements:
+        requests:
+          cpu: 500m
+          memory: 1Gi
+        limits:
+          cpu: 500m
+          memory: 1Gi
+      projects_persistence: false
+      replicas: 1
+      admin_user: admin
+      loadbalancer_protocol: http
+      route_host: awx.apps.cluster-pps7n.sandbox2151.opentlc.com
+      postgres_storage_class: 'gp3-csi'
+      postgres_storage_requirements:
+        limits:
+          storage: 20Gi
+        requests:
+          storage: 20Gi

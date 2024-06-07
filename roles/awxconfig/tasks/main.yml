@@ -1,2 +1,7 @@
 ---
 # tasks file for AWXConfig
+- include_tasks: check_api.yml
+
+- include_tasks: prepare.yml
+
+- include_tasks: post_install.yml

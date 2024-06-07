@@ -1,0 +1,39 @@
+---
+# tasks file for AWXConfig
+
+## Auditor user preparation
+- name: Get auditor credentials secret
+  kubernetes.core.k8s_info:
+    kind: Secret
+    namespace: '{{ ansible_operator_meta.namespace }}'
+    name: '{{ deployment_name }}-auditor-credentials'
+  register: auditor_secret
+
+- name: Get ID of possibly acme-auditor user
+  kubernetes.core.k8s_exec:
+    namespace: "{{ ansible_operator_meta.namespace }}"
+    pod: "{{ awx_web_pod_name }}"
+    container: "{{ deployment_name }}-web"
+    command: >-
+      bash -c "curl -s -H 'Content-Type: application/json' -X GET '{{ awx_service }}/api/v2/users/?search=acme-auditor' -u {{ awx_admin_user }}:{{ awx_admin_password }}"
+  register: acme_auditor_user
+
+- name: Set fact for ID of credential if it already exists
+  set_fact:
+    acme_auditor_user_id: "{{ acme_auditor_user.stdout | from_json |json_query('results') | first | json_query('id') }}"
+  when:
+    - acme_auditor_user.stdout | from_json |json_query('results') is defined
+    - acme_auditor_user.stdout | from_json |json_query('results') | first is defined
+    - acme_auditor_user.stdout | from_json |json_query('results') | first | json_query('id') is defined
+
+- name: Create random password for a temporary awx super user
+  set_fact:
+    awx_auditor_password: "{{ lookup('password', '/dev/null length=15 chars=ascii_letters,digits') }}"
+  no_log: true
+  when: auditor_secret['resources'] | length < 1
+
+- name: Create auditor user payload
+  copy:
+    content: "{{ lookup('template', 'auditor-user.json.j2') }}"
+    dest: /tmp/auditor-user-{{ ansible_operator_meta.namespace }}.json
+  when: auditor_secret['resources'] | length < 1

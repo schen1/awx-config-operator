@@ -4,4 +4,4 @@ resources:
 - bases/awx-config-operator.clusterserviceversion.yaml
 - ../default
 - ../samples
-- ../scorecard
+# - ../scorecard

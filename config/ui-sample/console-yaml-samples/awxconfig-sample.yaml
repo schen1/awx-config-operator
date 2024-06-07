@@ -1,0 +1,17 @@
+apiVersion: console.openshift.io/v1
+kind: ConsoleYAMLSample
+metadata:
+  name: awxconfig-sample
+spec:
+  description: Request an AWXConfig (AWX Day 1-2 Ops)
+  targetResource:
+    apiVersion: awx.acme.com/v1alpha1
+    kind: AWXConfig
+  title: Default AWXConfig
+  yaml: |
+    apiVersion: awx.acme.com/v1alpha1
+    kind: AWXConfig
+    metadata:
+      name: TODO
+    spec:
+      deployment_name: TODO

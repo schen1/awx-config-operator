@@ -1,0 +1,89 @@
+---
+# tasks file for AWXConfig
+
+## Auditor user setup
+- name: Copy auditor user payload to the pod
+  kubernetes.core.k8s_cp:
+    namespace: "{{ ansible_operator_meta.namespace }}"
+    pod: "{{ awx_web_pod_name }}"
+    container: "{{ deployment_name }}-web"
+    local_path: /tmp/auditor-user-{{ ansible_operator_meta.namespace }}.json
+    remote_path: /tmp/auditor-user.json
+    state: to_pod
+  when: 
+    - auditor_secret['resources'] | length < 1
+
+- name: Update auditor user
+  kubernetes.core.k8s_exec:
+    namespace: "{{ ansible_operator_meta.namespace }}"
+    pod: "{{ awx_web_pod_name }}"
+    container: "{{ deployment_name }}-web"
+    command: >-
+      bash -c "curl -H 'Content-Type: application/json' -X PUT {{ awx_service }}/api/v2/users/{{ acme_auditor_user_id }}/ -u {{ awx_admin_user }}:{{ awx_admin_password }} --data @/tmp/auditor-user.json && rm /tmp/auditor-user.json"
+  when: 
+    - auditor_secret['resources'] | length < 1
+    - acme_auditor_user_id is defined
+
+- name: Create new auditor user
+  kubernetes.core.k8s_exec:
+    namespace: "{{ ansible_operator_meta.namespace }}"
+    pod: "{{ awx_web_pod_name }}"
+    container: "{{ deployment_name }}-web"
+    command: >-
+      bash -c "curl -H 'Content-Type: application/json' -X POST {{ awx_service }}/api/v2/users/ -u {{ awx_admin_user }}:{{ awx_admin_password }} --data @/tmp/auditor-user.json && rm /tmp/auditor-user.json"
+  when: 
+    - auditor_secret['resources'] | length < 1
+    - acme_auditor_user_id is not defined
+
+- name: Test AWX Metrics API
+  kubernetes.core.k8s_exec:
+    namespace: "{{ ansible_operator_meta.namespace }}"
+    pod: "{{ awx_web_pod_name }}"
+    container: "{{ deployment_name }}-web"
+    command: >-
+      bash -c "curl -H 'Content-Type: application/json' {{ awx_service }}/api/v2/metrics/ -u acme-auditor:{{ awx_auditor_password }}"
+  when: 
+    - auditor_secret['resources'] | length < 1
+
+- name: Create auditor secret
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        namespace: '{{ ansible_operator_meta.namespace }}'
+        name: '{{ deployment_name }}-auditor-credentials'
+      data:
+        username: "{{ 'acme-auditor' | b64encode }}"
+        password: "{{ awx_auditor_password | b64encode }}"
+      type: Opaque
+  when: auditor_secret['resources'] | length < 1
+
+- name: Create service monitor
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: monitoring.coreos.com/v1
+      kind: ServiceMonitor
+      metadata:
+        namespace: '{{ ansible_operator_meta.namespace }}'
+        name: '{{ deployment_name }}-servicemonitor'
+      spec:
+        endpoints:
+          - basicAuth:
+              password:
+                key: password
+                name: '{{ deployment_name }}-auditor-credentials'
+              username:
+                key: username
+                name: '{{ deployment_name }}-auditor-credentials'
+            interval: 30s
+            path: /api/v2/metrics/
+            port: http
+            scheme: http
+        selector:
+          matchLabels:
+            app.kubernetes.io/component: awx
+            app.kubernetes.io/part-of: '{{ deployment_name }}'
+  when: auditor_secret['resources'] | length < 1

@@ -1,0 +1,88 @@
+---
+# tasks file for AWXConfig
+
+- name: Check if AWX exists
+  kubernetes.core.k8s_info:
+    api_version: '{{ api_version }}'
+    kind: '{{ kind }}'
+    name: '{{ deployment_name }}'
+    namespace: '{{ ansible_operator_meta.namespace }}'
+  register: instance
+
+- name: Make it a failure when AutomationController does not exist
+  fail:
+    msg: "AutomationController {{ deployment_name }} does not exist"
+  failed_when: instance.resources | length < 1
+
+- name: Wait for AWX to be created and successful
+  kubernetes.core.k8s_info:
+    api_version: '{{ api_version }}'
+    kind: '{{ kind }}'
+    name: '{{ deployment_name }}'
+    namespace: '{{ ansible_operator_meta.namespace }}'
+    wait: yes
+    wait_timeout: 30
+    wait_condition:
+      type: Running
+      status: 'True'
+      reason: Successful
+  register: created_instance
+  ignore_errors: yes
+
+- name: Make it a failure when AWX/AutomationController is not ready
+  fail:
+    msg: "AutomationController {{ deployment_name }} is created but is not ready"
+  failed_when: created_instance.msg is defined and '"Failed to gather" in created_instance.msg'
+
+- name: Wait for AWX pods to be ready
+  kubernetes.core.k8s_info:
+    kind: Pod
+    namespace: '{{ ansible_operator_meta.namespace }}'
+    label_selectors:
+      - 'app.kubernetes.io/managed-by={{ operator_type }}-operator'
+      - 'app.kubernetes.io/component={{ operator_type }}'
+      - 'app.kubernetes.io/part-of={{ deployment_name }}'
+  register: awx_pods
+  until: "awx_pods['resources'][0]['status']['phase'] == 'Running'"
+  delay: 5
+  retries: 30
+
+- name: Get AWX web pod
+  kubernetes.core.k8s_info:
+    kind: Pod
+    namespace: '{{ ansible_operator_meta.namespace }}'
+    label_selectors:
+      - 'app.kubernetes.io/managed-by={{ operator_type }}-operator'
+      - 'app.kubernetes.io/component={{ operator_type }}'
+      - 'app.kubernetes.io/part-of={{ deployment_name }}'
+      - 'app.kubernetes.io/name={{ deployment_name }}-web'
+  register: awx_web_pods
+
+- name: Get admin password
+  kubernetes.core.k8s_info:
+    kind: Secret
+    namespace: '{{ ansible_operator_meta.namespace }}'
+    name: '{{ deployment_name }}-admin-password'
+  register: secret
+
+- name: Set awx pod name and awx password as variables
+  set_fact:
+    awx_web_pod_name: "{{ awx_web_pods['resources'][0]['metadata']['name'] }}"
+    awx_service: "{{ deployment_name }}-service"
+    awx_admin_user: "admin"
+    awx_admin_password: "{{ secret['resources'][0]['data']['password'] | b64decode }}"
+
+## API check, should return 200 code
+- name: Check whether the API is up
+  kubernetes.core.k8s_exec:
+    namespace: "{{ ansible_operator_meta.namespace }}"
+    pod: "{{ awx_web_pod_name }}"
+    container: "{{ deployment_name }}-web"
+    command: >-
+      bash -c "curl -H 'Content-Type: application/json' -X GET -o /dev/null -s -w '%{http_code}\n' {{ awx_service }}/api/v2/config/ -u {{ awx_admin_user }}:{{ awx_admin_password }}"
+  register: api_results
+
+- name: Make it a failure when API is not up
+  fail:
+    msg: The AWX is not yet up
+  failed_when: api_results.stdout != "200\n"

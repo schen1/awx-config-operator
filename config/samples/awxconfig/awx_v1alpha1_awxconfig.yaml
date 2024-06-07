@@ -9,4 +9,4 @@ metadata:
     app.kubernetes.io/created-by: awx-config-operator
   name: awxconfig-sample
 spec:
-  # TODO(user): Add fields here
+  deployment_name: awx-sample

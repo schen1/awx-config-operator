@@ -69,7 +69,7 @@ spec:
       - args:
         - --leader-elect
         - --leader-election-id=awx-config-operator
-        image: controller:latest
+        image: quay.io/sychen/awx-config-operator
         name: manager
         env:
         - name: ANSIBLE_GATHERING
@@ -96,7 +96,7 @@ spec:
         resources:
           limits:
             cpu: 500m
-            memory: 768Mi
+            memory: 2Gi
           requests:
             cpu: 10m
             memory: 256Mi

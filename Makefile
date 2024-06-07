@@ -51,7 +51,7 @@ endif
 OPERATOR_SDK_VERSION ?= v1.32.0
 
 # Image URL to use all building/pushing image targets
-IMG ?= controller:latest
+IMG ?= quay.io/sychen/awx-config-operator
 
 .PHONY: all
 all: docker-build
