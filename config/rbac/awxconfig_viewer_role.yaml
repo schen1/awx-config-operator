@@ -1,0 +1,27 @@
+# permissions for end users to view awxconfigs.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: awxconfig-viewer-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: awx-config-operator
+    app.kubernetes.io/part-of: awx-config-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: awxconfig-viewer-role
+rules:
+- apiGroups:
+  - awx.acme.com
+  resources:
+  - awxconfigs
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - awx.acme.com
+  resources:
+  - awxconfigs/status
+  verbs:
+  - get

@@ -1,0 +1,4 @@
+## Append samples of your project ##
+resources:
+- awx_v1alpha1_awxconfig.yaml
+#+kubebuilder:scaffold:manifestskustomizesamples
