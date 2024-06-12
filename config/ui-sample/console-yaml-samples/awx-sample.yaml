@@ -53,7 +53,7 @@ spec:
       replicas: 1
       admin_user: admin
       loadbalancer_protocol: http
-      route_host: awx.apps.cluster-pps7n.sandbox2151.opentlc.com
+      route_host: awx.apps.cluster-hb4z6.sandbox1188.opentlc.com
       postgres_storage_class: 'gp3-csi'
       postgres_storage_requirements:
         limits:
