@@ -9,6 +9,7 @@ metadata:
     app.kubernetes.io/created-by: awx-config-operator
     app.kubernetes.io/part-of: awx-config-operator
     app.kubernetes.io/managed-by: kustomize
+    rbac.authorization.k8s.io/aggregate-to-edit: "true"
   name: awxconfig-editor-role
 rules:
 - apiGroups:
