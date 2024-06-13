@@ -16,3 +16,6 @@ resources:
 - auth_proxy_role.yaml
 - auth_proxy_role_binding.yaml
 - auth_proxy_client_clusterrole.yaml
+# Add RBAC for the users
+- awxconfig_editor_role.yaml
+- awxconfig_viewer_role.yaml
